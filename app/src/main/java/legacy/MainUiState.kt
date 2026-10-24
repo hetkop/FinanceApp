@@ -1,4 +1,4 @@
-package com.example.financeapp
+package legacy
 
 internal data class MainUiState(
     val balance: Int = 0,
