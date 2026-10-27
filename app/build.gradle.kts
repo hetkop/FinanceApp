@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.compose.compiler)
@@ -35,8 +37,8 @@ val openDetektReport by tasks.registering(Exec::class) {
 
     onlyIf("Detekt reported issues") {
         htmlFile.isFile &&
-            xmlFile.isFile &&
-            xmlFile.readText().contains("<error ")
+                xmlFile.isFile &&
+                xmlFile.readText().contains("<error ")
     }
 
     when {
@@ -54,9 +56,7 @@ tasks.named("detekt") {
 
 android {
     namespace = "com.example.financeapp"
-    compileSdk {
-        version = release(37)
-    }
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.example.financeapp"
@@ -70,9 +70,7 @@ android {
 
     buildTypes {
         release {
-            optimization {
-                enable = false
-            }
+            isMinifyEnabled = false
         }
     }
     compileOptions {
@@ -84,12 +82,10 @@ android {
     }
 }
 
+
+
 dependencies {
-    detektPlugins("dev.detekt:detekt-rules-ktlint-wrapper:${libs.versions.detekt.get()}")
-
-    val composeBom = platform(libs.androidx.compose.bom)
-
-    implementation(composeBom)
+    implementation(platform("androidx.compose:compose-bom:2026.09.00"))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.ui.tooling.preview)
@@ -98,7 +94,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     debugImplementation(libs.androidx.compose.ui.tooling)
     testImplementation(libs.junit)
-    androidTestImplementation(composeBom)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
 }
+

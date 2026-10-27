@@ -1,8 +1,6 @@
 package com.example.financeapp
 
-internal enum class TransactionType {
-    INCOME, EXPENSE
-}
+internal enum class TransactionType { INCOME, EXPENSE }
 
 internal enum class TransactionError {
     INVALID_INPUT, AMOUNT_TOO_LARGE
