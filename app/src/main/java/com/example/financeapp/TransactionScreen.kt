@@ -50,8 +50,7 @@ internal fun TransactionScreen(
             )
             OutlinedTextField(
                 value = state.amount,
-                onValueChange = { viewModel.onEvent(
-                    MainUiEvent.AmountChanged(it)) },
+                onValueChange = { viewModel.onEvent(MainUiEvent.AmountChanged(it)) },
                 label = { Text(stringResource(R.string.transaction_amount)) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             )
@@ -82,15 +81,24 @@ internal fun TransactionScreen(
             Button(onClick = viewModel::addTransaction) {
                 Text(stringResource(R.string.transaction_add))
             }
-            if (state.transactions.isNotEmpty()) {
-                Text(stringResource(R.string.transaction_history))
-                state.transactions.asReversed().forEach { tx ->
-                    val row = if (tx.type == TransactionType.INCOME)
-                        R.string.transaction_history_income
-                    else R.string.transaction_history_expense
-                    Text(stringResource(row, tx.description, tx.amount))
-                }
-            }
+            TransactionHistoryList(transactions = state.transactions)
         }
     }
 }
+
+@Composable
+@Suppress("FunctionNaming")
+private fun TransactionHistoryList(transactions: List<Transaction>) {
+    if (transactions.isNotEmpty()) {
+        Text(stringResource(R.string.transaction_history))
+        transactions.asReversed().forEach { tx ->
+            val row = if (tx.type == TransactionType.INCOME) {
+                R.string.transaction_history_income
+            } else {
+                R.string.transaction_history_expense
+            }
+            Text(stringResource(row, tx.description, tx.amount))
+        }
+    }
+}
+

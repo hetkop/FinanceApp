@@ -15,30 +15,25 @@ internal class TransactionViewModel : ViewModel() {
 
     fun addTransaction() {
         val description = uiState.description.trim()
-        if (uiState.amount.isEmpty() || description.isEmpty()) {
-            onEvent(MainUiEvent.InvalidTransaction)
-            return
-        }
-
         val amount = uiState.amount.toIntOrNull()
-        if (amount == null) {
-            onEvent(MainUiEvent.AmountTooLarge)
-            return
-        }
-        if (amount <= 0) {
-            onEvent(MainUiEvent.InvalidTransaction)
-            return
-        }
 
-        // --- ВСТАВЛЕННЫЙ ФРАГМЕНТ ИЗ ШАГА 24 ---
-        onEvent(MainUiEvent.AddTransaction(
-            Transaction(
-                amount = amount,
-                type = uiState.type,
-                description = description,
+        if (uiState.amount.isEmpty() || description.isEmpty() || (amount != null && amount <= 0)) {
+            onEvent(MainUiEvent.InvalidTransaction)
+        } else if (amount == null) {
+            onEvent(MainUiEvent.AmountTooLarge)
+        } else {
+            onEvent(
+                MainUiEvent.AddTransaction(
+                    Transaction(
+                        amount = amount,
+                        type = uiState.type,
+                        description = description,
+                    )
+                )
             )
-        ))
+        }
     }
+
 
     private fun reduce(
         state: MainUiState, event: MainUiEvent,
@@ -80,5 +75,6 @@ internal class TransactionViewModel : ViewModel() {
         }
     }
 }
+
 
 
