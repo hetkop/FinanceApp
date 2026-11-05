@@ -1,4 +1,4 @@
-package com.example.financeapp
+package com.example.financeapp.legacy
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -18,13 +18,17 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.financeapp.TransactionScreen
+
+
+private const val AMOUNT = 100
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,7 +36,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             FinanceAppTheme {
-                FinanceAppScreen()
+                TransactionScreen()
             }
         }
     }
@@ -47,7 +51,7 @@ private fun FinanceAppTheme(content: @Composable () -> Unit) {
 @Composable
 @Suppress("FunctionNaming")
 private fun FinanceAppScreen() {
-    var checkSucceeded by rememberSaveable { mutableStateOf(false) }
+    var state by remember { mutableStateOf(MainUiState()) }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -66,16 +70,35 @@ private fun FinanceAppScreen() {
         ) {
             Text(
                 text = stringResource(
-                    if (checkSucceeded) {
-                        R.string.check_success_message
-                    } else {
-                        R.string.test_screen_message
-                    },
+                    com.example.financeapp.R.string.balance_summary,
+                    state.balance,
+                    state.count,
                 ),
                 style = MaterialTheme.typography.headlineSmall,
             )
-            Button(onClick = { checkSucceeded = true }) {
-                Text(text = stringResource(R.string.check_button))
+            Button(onClick = {
+                val transaction = Transaction(
+                    AMOUNT,
+                    TransactionType.DEPOSIT
+                )
+                state = reduce(
+                    state,
+                    MainUiEvent.AddTransaction(transaction)
+                )
+            }) {
+                Text(text = stringResource(com.example.financeapp.R.string.add_income_button))
+            }
+            Button(onClick = {
+                val transaction = Transaction(
+                    AMOUNT,
+                    TransactionType.WITHDRAW
+                )
+                state = reduce(
+                    state,
+                    MainUiEvent.AddTransaction(transaction)
+                )
+            }) {
+                Text(text = stringResource(com.example.financeapp.R.string.add_expense_button))
             }
         }
     }
