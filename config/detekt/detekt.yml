@@ -32,7 +32,7 @@ console-reports:
      - 'FileBasedFindingsReport'
   #  - 'LiteFindingsReport'
 
-ktlint:
+formatting:
   active: true
   autoCorrect: false
   ClassSignature:
