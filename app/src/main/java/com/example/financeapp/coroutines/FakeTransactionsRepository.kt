@@ -12,10 +12,6 @@ internal class FakeTransactionsRepository {
         delay(LOAD_DELAY_MS)
         if (shouldFail) throw IOException("Учебная ошибка загрузки")
 
-        return listOf(
-            Transaction(amount = 4_000, type = TransactionType.INCOME, description = "Подработка"),
-            Transaction(amount = 650, type = TransactionType.EXPENSE, description = "Продукты"),
-            Transaction(amount = 250, type = TransactionType.EXPENSE, description = "Кофе"),
-        )
+        return listOf(Transaction(amount = 250, type = TransactionType.EXPENSE, description = "Кофе"))
     }
 }

@@ -22,9 +22,7 @@ fun main(args: Array<String>) {
             "6" -> exercise6()
             "7" -> exercise7()
             "8" -> exercise8()
-            "9" -> exercise9()
-            "10" -> exercise10()
-            else -> println("Передайте demo или номер задания от 1 до 10.")
+            else -> println("Передайте demo или номер консольного задания от 1 до 8.")
         }
     }
 }
@@ -79,26 +77,17 @@ private suspend fun exercise5(): Unit = coroutineScope {
 }
 
 private suspend fun exercise6() {
-    val expenses = loadExpenses()
-    println("Расходы: $expenses ₽")
-}
-
-private suspend fun exercise7() {
     val items = loadOperations(shouldFail = false)
     println("Загружено операций: ${items.size}")
 }
 
-private suspend fun exercise8() {
+private suspend fun exercise7() {
     val updates = operationUpdates()
     updates.collect { println(it) }
-    // Подпишитесь на тот же поток ещё раз.
+    // Во второй подписке отфильтруйте расходы и преобразуйте их в строки.
 }
 
-private suspend fun exercise9() {
-    operationUpdates().collect { println(it) }
-}
-
-private suspend fun exercise10() {
+private suspend fun exercise8() {
     val state = MutableStateFlow("Ожидание")
     println(state.value)
     // Запустите подписчика и обновите состояние при загрузке операций.

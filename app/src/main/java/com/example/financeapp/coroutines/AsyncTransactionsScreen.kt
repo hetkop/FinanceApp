@@ -1,16 +1,16 @@
 package com.example.financeapp.coroutines
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -29,43 +29,31 @@ import com.example.financeapp.TransactionType
 internal fun AsyncTransactionsScreen(viewModel: AsyncTransactionsViewModel, onOpenLegacy: () -> Unit) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    LazyColumn(
-        modifier = Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing),
-        contentPadding = PaddingValues(24.dp),
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .windowInsetsPadding(WindowInsets.safeDrawing)
+            .verticalScroll(rememberScrollState())
+            .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        item {
-            Text(stringResource(R.string.async_title), style = MaterialTheme.typography.headlineMedium)
-        }
-        item {
-            TextButton(onClick = onOpenLegacy) { Text(stringResource(R.string.async_open_legacy)) }
-        }
-        item {
-            val label = if (state == AsyncTransactionsState.Error) R.string.async_retry else R.string.async_load
-            Button(
-                onClick = { viewModel.load() },
-                enabled = state != AsyncTransactionsState.Loading,
-            ) { Text(stringResource(label)) }
-        }
-        item {
-            OutlinedButton(
-                onClick = { viewModel.load(shouldFail = true) },
-                enabled = state != AsyncTransactionsState.Loading,
-            ) { Text(stringResource(R.string.async_simulate_error)) }
+        Text(stringResource(R.string.async_title), style = MaterialTheme.typography.headlineMedium)
+        TextButton(onClick = onOpenLegacy) { Text(stringResource(R.string.async_open_legacy)) }
+
+        val loadLabel = if (state == AsyncTransactionsState.Error) R.string.async_retry else R.string.async_load
+        val canLoad = state != AsyncTransactionsState.Loading
+        Button(onClick = { viewModel.load() }, enabled = canLoad) { Text(stringResource(loadLabel)) }
+        OutlinedButton(onClick = { viewModel.load(shouldFail = true) }, enabled = canLoad) {
+            Text(stringResource(R.string.async_simulate_error))
         }
 
         when (val current = state) {
-            AsyncTransactionsState.Idle -> item { Text(stringResource(R.string.async_idle)) }
+            AsyncTransactionsState.Idle -> Unit
 
-            AsyncTransactionsState.Loading -> {
-                item { LinearProgressIndicator(modifier = Modifier.fillMaxWidth()) }
-                item { Text(stringResource(R.string.transaction_loading)) }
-                item {
-                    TextButton(onClick = viewModel::cancelLoad) { Text(stringResource(R.string.async_cancel)) }
-                }
-            }
+            AsyncTransactionsState.Loading -> Text(stringResource(R.string.transaction_loading))
 
-            is AsyncTransactionsState.Content -> items(current.transactions) { transaction ->
+            is AsyncTransactionsState.Content -> current.transactions.forEach { transaction ->
                 val label = when (transaction.type) {
                     TransactionType.INCOME -> R.string.transaction_history_income
                     TransactionType.EXPENSE -> R.string.transaction_history_expense
@@ -73,7 +61,7 @@ internal fun AsyncTransactionsScreen(viewModel: AsyncTransactionsViewModel, onOp
                 Text(stringResource(label, transaction.description, transaction.amount))
             }
 
-            AsyncTransactionsState.Error -> item {
+            AsyncTransactionsState.Error -> {
                 Text(stringResource(R.string.async_error), color = MaterialTheme.colorScheme.error)
             }
         }
