@@ -1,4 +1,4 @@
-package com.example.financeapp
+package com.example.financeapp.legacy2
 
 import androidx.room.Dao
 import androidx.room.Insert

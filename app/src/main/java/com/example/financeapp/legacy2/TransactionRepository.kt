@@ -1,10 +1,11 @@
-package com.example.financeapp
+package com.example.financeapp.legacy2
 
 import android.content.Context
 import android.database.sqlite.SQLiteException
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import com.example.financeapp.Transaction
 import java.util.concurrent.Executors
 
 private const val DATABASE_LOG_TAG = "TransactionDatabase"

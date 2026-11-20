@@ -1,4 +1,7 @@
-package com.example.financeapp
+package com.example.financeapp.legacy2
+
+import com.example.financeapp.Transaction
+import com.example.financeapp.TransactionType
 
 internal data class MainUiState(
     val amount: String = "",
@@ -13,15 +16,7 @@ internal data class MainUiState(
     val isDatabaseReady: Boolean = false,
 )
 
-internal enum class TransactionType { INCOME, EXPENSE }
-
 internal enum class TransactionError { INVALID_INPUT, AMOUNT_TOO_LARGE, DATABASE_ERROR }
-
-internal data class Transaction(
-    val amount: Int,
-    val type: TransactionType,
-    val description: String,
-)
 
 internal sealed interface MainUiEvent {
     data class AmountChanged(val value: String) : MainUiEvent

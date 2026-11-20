@@ -1,4 +1,4 @@
-package com.example.financeapp
+package com.example.financeapp.legacy2
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
@@ -22,12 +23,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
+import com.example.financeapp.R
+import com.example.financeapp.Transaction
+import com.example.financeapp.TransactionType
 
 @Composable
 @Suppress("FunctionNaming")
-internal fun TransactionScreen(viewModel: TransactionViewModel, showBalance: Boolean, onOpenSettings: () -> Unit) {
+internal fun TransactionScreen(
+    viewModel: TransactionViewModel,
+    showBalance: Boolean,
+    onOpenSettings: () -> Unit,
+    onBack: () -> Unit,
+) {
     val state = viewModel.uiState
     Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Column(
@@ -38,8 +46,13 @@ internal fun TransactionScreen(viewModel: TransactionViewModel, showBalance: Boo
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text(stringResource(R.string.transaction_title), style = MaterialTheme.typography.headlineMedium)
-            TextButton(onClick = onOpenSettings) {
-                Text(stringResource(R.string.settings_title))
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                TextButton(onClick = onBack) {
+                    Text(stringResource(R.string.settings_back))
+                }
+                TextButton(onClick = onOpenSettings) {
+                    Text(stringResource(R.string.settings_title))
+                }
             }
             if (showBalance) {
                 Text(stringResource(R.string.balance_summary, state.balance, state.transactionCount))

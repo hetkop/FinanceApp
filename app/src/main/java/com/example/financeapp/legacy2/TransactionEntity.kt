@@ -1,7 +1,9 @@
-package com.example.financeapp
+package com.example.financeapp.legacy2
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.example.financeapp.Transaction
+import com.example.financeapp.TransactionType
 
 @Entity(tableName = "transactions")
 internal data class TransactionEntity(

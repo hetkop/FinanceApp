@@ -1,6 +1,7 @@
-package com.example.financeapp
+package com.example.financeapp.legacy2
 
 import androidx.room.TypeConverter
+import com.example.financeapp.TransactionType
 
 internal class TransactionTypeConverter {
     @TypeConverter

@@ -1,4 +1,4 @@
-package com.example.financeapp
+package com.example.financeapp.legacy2
 
 import android.content.Context
 import androidx.room.Database
