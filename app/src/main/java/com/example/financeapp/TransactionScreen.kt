@@ -21,13 +21,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.material3.TextButton
 
 @Composable
 @Suppress("FunctionNaming")
 internal fun TransactionScreen(
-    viewModel: TransactionViewModel = viewModel(),
-) {
+    viewModel: TransactionViewModel,
+    showBalance: Boolean,
+    onOpenSettings: () -> Unit,
+)
+{
     val state = viewModel.uiState
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -37,55 +40,67 @@ internal fun TransactionScreen(
                 .padding(24.dp)
         ) {
             Text(stringResource(R.string.transaction_title))
-            Text(stringResource(
-                R.string.balance_summary,
-                state.balance, state.transactionCount,
-            ))
+            TextButton(onClick = onOpenSettings) {
+                Text(stringResource(R.string.settings_title))
+            }
+            if (showBalance) {
+                Text(stringResource(R.string.balance_summary, state.balance, state.transactionCount))
+            } else {
+                Text(stringResource(R.string.transaction_count, state.transactionCount))
+            }
             if (state.isLoading) {
                 Text(stringResource(R.string.transaction_loading))
             }
-            OutlinedTextField(
-                value = state.description,
-                onValueChange = {
-                    viewModel.onEvent(MainUiEvent.DescriptionChanged(it))
-                },
-                label = { Text(stringResource(R.string.transaction_description)) },
-                enabled = state.isDatabaseReady && !state.isSaving,
-                )
-            OutlinedTextField(
-                value = state.amount,
-                onValueChange = { viewModel.onEvent(MainUiEvent.AmountChanged(it)) },
-                label = { Text(stringResource(R.string.transaction_amount)) },
-                enabled = state.isDatabaseReady && !state.isSaving,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            )
-
-            Row {
-                FilterChip(
-                    selected = state.type == TransactionType.EXPENSE,
-                    onClick = { viewModel.onEvent(
-                        MainUiEvent.TypeChanged(TransactionType.EXPENSE)) },
-                    label = { Text(stringResource(R.string.transaction_expense)) },
-                    enabled = state.isDatabaseReady && !state.isSaving,
-                    )
-                FilterChip(
-                    selected = state.type == TransactionType.INCOME,
-                    onClick = { viewModel.onEvent(
-                        MainUiEvent.TypeChanged(TransactionType.INCOME)) },
-                    label = { Text(stringResource(R.string.transaction_income)) },
-                    enabled = state.isDatabaseReady && !state.isSaving,
-                    )
-            }
-            TransactionErrorText(error = state.error)
-
-            Button(onClick = viewModel::addTransaction,
-                enabled = state.isDatabaseReady && !state.isSaving,) {
-                Text(stringResource(R.string.transaction_add))
-            }
+            TransactionForm(viewModel = viewModel, state = state)
             TransactionHistoryList(transactions = state.transactions)
         }
     }
 }
+
+@Composable
+@Suppress("FunctionNaming")
+private fun TransactionForm(
+    viewModel: TransactionViewModel,
+    state: MainUiState,
+) {
+    OutlinedTextField(
+        value = state.description,
+        onValueChange = {
+            viewModel.onEvent(MainUiEvent.DescriptionChanged(it))
+        },
+        label = { Text(stringResource(R.string.transaction_description)) },
+        enabled = state.isDatabaseReady && !state.isSaving,
+    )
+    OutlinedTextField(
+        value = state.amount,
+        onValueChange = { viewModel.onEvent(MainUiEvent.AmountChanged(it)) },
+        label = { Text(stringResource(R.string.transaction_amount)) },
+        enabled = state.isDatabaseReady && !state.isSaving,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+    )
+    Row {
+        FilterChip(
+            selected = state.type == TransactionType.EXPENSE,
+            onClick = { viewModel.onEvent(MainUiEvent.TypeChanged(TransactionType.EXPENSE)) },
+            label = { Text(stringResource(R.string.transaction_expense)) },
+            enabled = state.isDatabaseReady && !state.isSaving,
+        )
+        FilterChip(
+            selected = state.type == TransactionType.INCOME,
+            onClick = { viewModel.onEvent(MainUiEvent.TypeChanged(TransactionType.INCOME)) },
+            label = { Text(stringResource(R.string.transaction_income)) },
+            enabled = state.isDatabaseReady && !state.isSaving,
+        )
+    }
+    TransactionErrorText(error = state.error)
+    Button(
+        onClick = viewModel::addTransaction,
+        enabled = state.isDatabaseReady && !state.isSaving,
+    ) {
+        Text(stringResource(R.string.transaction_add))
+    }
+}
+
 @Composable
 @Suppress("FunctionNaming")
 private fun TransactionErrorText(error: TransactionError?) {
