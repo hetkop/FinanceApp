@@ -7,6 +7,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.onAllNodesWithText
 
 @RunWith(AndroidJUnit4::class)
 class AsyncTransactionsPracticeTest {
@@ -15,13 +17,33 @@ class AsyncTransactionsPracticeTest {
 
     @Test
     fun exercise9() {
-        composeTestRule.onNodeWithText(composeTestRule.activity.getString(R.string.async_load)).performClick()
-        // Дождитесь результата и проверьте, что операция видна.
+        composeTestRule.onNodeWithText("Загрузить операции").performClick()
+        val operation = "Кофе: −250 ₽"
+        waitForText(operation)
+        composeTestRule.onNodeWithText(operation).assertIsDisplayed()
     }
+
 
     @Test
     fun exercise10() {
-        composeTestRule.onNodeWithText(composeTestRule.activity.getString(R.string.async_simulate_error)).performClick()
-        // Дождитесь ошибки, нажмите «Повторить» и проверьте появление операции.
+        composeTestRule.onNodeWithText("Имитировать ошибку").performClick()
+
+        val error = composeTestRule.activity.getString(R.string.async_error)
+        waitForText(error)
+        composeTestRule.onNodeWithText(error).assertIsDisplayed()
+
+        val retry = composeTestRule.activity.getString(R.string.async_retry)
+        composeTestRule.onNodeWithText(retry).performClick()
+
+        val operation = "Кофе: −250 ₽"
+        waitForText(operation)
+        composeTestRule.onNodeWithText(operation).assertIsDisplayed()
+    }
+
+    private fun waitForText(text: String) {
+        composeTestRule.waitUntil(timeoutMillis = 5_000) {
+            composeTestRule.onAllNodesWithText(text)
+                .fetchSemanticsNodes().isNotEmpty()
+        }
     }
 }

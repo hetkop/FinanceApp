@@ -9,6 +9,17 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.io.IOException
 import kotlin.time.measureTime
+import kotlinx.coroutines.async
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.yield
 
 fun main(args: Array<String>) {
     runBlocking {
@@ -38,60 +49,131 @@ private suspend fun delayDemo(): Unit = coroutineScope {
         println("Другая корутина выполнилась во время ожидания")
     }
 }
+private suspend fun loadBalance(): Int {
+    val income = loadIncome()
+    val expenses = loadExpenses()
+    return income - expenses
+}
 
 private suspend fun exercise1() {
     println("Начало")
-    // Вызовите здесь свою suspend-функцию расчёта баланса.
+    val balance = loadBalance()
+    println("Баланс: $balance ₽")
     println("Готово")
 }
 
-private suspend fun exercise2() {
-    val income = loadIncome()
-    println("Доход: $income ₽")
+private suspend fun exercise2() = coroutineScope {
+    val job = launch {
+        val income = loadIncome()
+        println("Доход: $income ₽")
+    }
     println("Запрос запущен")
+    job.join()
+    println("Все задачи завершены")
 }
 
-private suspend fun exercise3() {
-    val sequentialTime = measureTime {
-        val balance = loadIncome() - loadExpenses()
-        println("Баланс: $balance ₽")
-    }
-    println("Последовательно: $sequentialTime")
-    // Замерьте второй вариант, где оба запроса уже запущены к моменту первого await().
+private suspend fun exercise3() = coroutineScope {
+    val sequentialStart = System.currentTimeMillis()
+    val sequentialBalance = loadIncome() - loadExpenses()
+    val sequentialTime = System.currentTimeMillis() - sequentialStart
+    println("Последовательный запуск: $sequentialBalance ₽ за $sequentialTime мс")
+
+    val concurrentStart = System.currentTimeMillis()
+    val incomeDeferred = async { loadIncome() }
+    val expensesDeferred = async { loadExpenses() }
+    val concurrentBalance = incomeDeferred.await() - expensesDeferred.await()
+    val concurrentTime = System.currentTimeMillis() - concurrentStart
+    println("Конкурентный запуск: $concurrentBalance ₽ за $concurrentTime мс")
 }
+
+
 
 private suspend fun exercise4() {
-    println("Поток вызывающего кода: ${Thread.currentThread().name}")
-    val balance = readCachedBalance()
-    println("Баланс из кеша: $balance ₽")
+    println("До чтения: ${Thread.currentThread().name}")
+    val balance = withContext(Dispatchers.IO) {
+        readCachedBalance()
+    }
+    println("После возврата: ${Thread.currentThread().name}, баланс: $balance ₽")
 }
 
-private suspend fun exercise5(): Unit = coroutineScope {
-    launch {
-        repeat(5) { step ->
-            delay(200)
-            println("Шаг ${step + 1}")
+private suspend fun exercise5() = coroutineScope {
+    val job = launch {
+        try {
+            repeat(5) { step ->
+                delay(200)
+                println("Шаг ${step + 1}")
+            }
+        } finally {
+            println("Ресурс освобождён")
         }
     }
-    // Отмените дочернюю задачу и дождитесь её завершения.
+    delay(450)
+    job.cancelAndJoin()
+    println("Отмена завершена")
 }
 
 private suspend fun exercise6() {
-    val items = loadOperations(shouldFail = false)
-    println("Загружено операций: ${items.size}")
+    val fastResult = withTimeoutOrNull(300) {
+        loadOperations(shouldFail = false)
+    }
+    if (fastResult == null) {
+        println("300 мс: Время ожидания истекло.")
+    } else {
+        println("300 мс: Загружено операций: ${fastResult.size}.")
+    }
+    val normalResult = withTimeoutOrNull(1200) {
+        loadOperations(shouldFail = false)
+    }
+    if (normalResult == null) {
+        println("1200 мс: Время ожидания истекло.")
+    } else {
+        println("1200 мс: Загружено операций: ${normalResult.size}.")
+    }
+    val operations = try {
+        loadOperations(shouldFail = true)
+    } catch (e: IOException) {
+        println("Учебная ошибка: ${e.message}")
+        loadOperations(shouldFail = false)
+    }
+    println("Повторная загрузка: получено операций: ${operations.size}.")
 }
+
 
 private suspend fun exercise7() {
-    val updates = operationUpdates()
-    updates.collect { println(it) }
-    // Во второй подписке отфильтруйте расходы и преобразуйте их в строки.
+    println("Первая подписка:")
+    operationUpdates().collect { operation ->
+        println(operation)
+    }
+
+    println("Вторая подписка:")
+    operationUpdates()
+        .filter { it.amount < 0 }
+        .map { "${it.title} — ${-it.amount} ₽" }
+        .collect { line ->
+            println(line)
+        }
 }
 
-private suspend fun exercise8() {
+
+private suspend fun exercise8() = coroutineScope {
     val state = MutableStateFlow("Ожидание")
-    println(state.value)
-    // Запустите подписчика и обновите состояние при загрузке операций.
+    val publicState = state.asStateFlow()
+
+    launch {
+        publicState
+            .take(3)
+            .collect { value ->
+                println(value)
+            }
+    }
+
+    yield()
+
+    state.value = "Загрузка"
+    val operations = loadOperations(false)
+    state.value = "Загружено: ${operations.size}"
 }
+
 
 private suspend fun loadIncome(): Int {
     delay(600)
@@ -124,8 +206,11 @@ private suspend fun loadOperations(shouldFail: Boolean): List<Operation> {
     return operations
 }
 
-private fun operationUpdates() = flow {
+private fun operationUpdates(): Flow<Operation> = flow {
+    println("Источник запущен")
     for (operation in operations) {
+        delay(200)
         emit(operation)
     }
 }
+
